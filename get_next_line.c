@@ -6,7 +6,7 @@
 /*   By: bdevessi <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/11/15 14:10:43 by bdevessi          #+#    #+#             */
-/*   Updated: 2018/11/15 16:52:19 by bdevessi         ###   ########.fr       */
+/*   Updated: 2018/11/16 09:51:19 by bdevessi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 
 int				get_next_line(const int fd, char **line)
 {
-	(void)fd;
 	static char		buffer[BUFF_SIZE];
 	static char		*p;
 	ssize_t			read_bytes;
