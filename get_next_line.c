@@ -1,54 +1,85 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*   v3get_next_line.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: bdevessi <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2018/11/15 14:10:43 by bdevessi          #+#    #+#             */
-/*   Updated: 2018/11/16 09:51:19 by bdevessi         ###   ########.fr       */
+/*   Created: 2018/11/19 10:40:41 by bdevessi          #+#    #+#             */
+/*   Updated: 2018/11/20 17:09:53 by bdevessi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include "libft/libft.h"
-#include <stdio.h>
 
-int				get_next_line(const int fd, char **line)
+static int	complete_partially(t_buffer *b, char *nl, char **string)
 {
-	static char		buffer[BUFF_SIZE];
-	static char		*p;
-	ssize_t			read_bytes;
-	ssize_t			total_read_bytes;
-	char			*tmp;
-	char			*other_occurence;
+	char	*str;
+	char	*tmp;
 
-	read_bytes = 0;
-	total_read_bytes = read_bytes;
-	tmp = NULL;
-	if ((p = p ? p : ft_strchr(buffer, '\n')))
+	tmp = *string;
+	if ((!(str = ft_strndup(b->payload, nl - b->payload))
+		|| !(*string = tmp ? ft_strjoin(*string, str) : str)))
 	{
-		other_occurence = ft_strchr(p + 1, '\n');
-		if (other_occurence != NULL)
+		free(str);
+		free(*string);
+		return (-1);
+	}
+	ft_memcpy(b->payload, nl + 1, b->length);
+	if (tmp)
+	{
+		free(tmp);
+		free(str);
+	}
+	b->length -= nl - b->payload + 1;
+	return (0);
+}
+
+static int	read_buffer(const int fd, t_buffer *b, char **string)
+{
+	char	*nl;
+	char	*tmp;
+
+	if (fd < 0 || fd >= INT_MAX)
+		return (-1);
+	if (b->length == 0)
+		return (1);
+	if ((nl = ft_memchr(b->payload, '\n', b->length)))
+		return (complete_partially(b, nl, string));
+	tmp = *string;
+	if (!(*string = tmp ? ft_strjoin(tmp, b->payload) : ft_strdup(b->payload)))
+		return (-1);
+	bzero(b->payload, BUFF_SIZE);
+	if (tmp)
+		free(tmp);
+	return (1);
+}
+
+int			get_next_line(const int fd, char **line)
+{
+	static t_buffer		buffer[INT_MAX];
+	int					result;
+	ssize_t				read_bytes;
+	char				*string;
+
+	string = NULL;
+	while ((result = read_buffer(fd, &buffer[fd], &string)))
+	{
+		if (result == -1
+				|| (read_bytes = read(fd, buffer[fd].payload, BUFF_SIZE)) < 0)
 		{
-			// On a localise une autre occurence du retour chariot, on peut 
-			tmp = ft_strsub(buffer, p - buffer + 1, other_occurence - p - 1);
-			p = other_occurence;
-			*line = tmp;
-			return (1);
+			if (string)
+				free(string);
+			return (-1);
 		}
+		if (buffer[fd].length && !read_bytes)
+		{
+			buffer[fd].length = read_bytes;
+			break ;
+		}
+		else if (!buffer[fd].length && !read_bytes)
+			return ((int)(*line = string) & 0);
+		buffer[fd].length = read_bytes;
 	}
-	while ((read_bytes = read(fd, buffer, BUFF_SIZE)) > 0)
-	{
-		p = ft_memchr(buffer, '\n', read_bytes);
-		tmp = ft_strnew(p - buffer);
-		int	i = 0;
-		char	*str = tmp;
-		while (buffer[i] != '\n' && i < BUFF_SIZE)
-			*tmp++ = buffer[i++];
-		*tmp = '\0';
-		printf("%s string\n", str);
-		*line = ft_strjoin(*line, str);
-	}
-	return 1;
+	return ((int)(*line = string) || 1);
 }
