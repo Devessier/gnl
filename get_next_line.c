@@ -6,7 +6,7 @@
 /*   By: bdevessi <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/11/21 13:34:52 by bdevessi          #+#    #+#             */
-/*   Updated: 2018/11/23 09:33:05 by bdevessi         ###   ########.fr       */
+/*   Updated: 2018/11/23 12:04:15 by bdevessi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,8 @@ static int	complete_partially(t_buffer *b, char *nl, char **string)
 	char	*tmp;
 
 	tmp = *string;
-	if ((!(str = ft_strndup(b->payload, nl - b->payload))
-		|| !(*string = tmp ? ft_strjoin(*string, str) : str)))
+	if (!((str = ft_strndup(b->payload, nl - b->payload))
+		&& (*string = tmp ? ft_strjoin(*string, str) : str)))
 	{
 		free(str);
 		free(*string);
@@ -78,7 +78,7 @@ int			get_next_line(const int fd, char **line)
 			buffer[fd].length = read_bytes;
 			break ;
 		}
-		else if (!buffer[fd].length && !read_bytes)
+		else if (!(buffer[fd].length || read_bytes))
 			return ((int)(*line = string) & 0);
 		buffer[fd].length = read_bytes;
 	}
