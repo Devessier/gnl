@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   v3get_next_line.c                                  :+:      :+:    :+:   */
+/*   get_next_line.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: bdevessi <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2018/11/19 10:40:41 by bdevessi          #+#    #+#             */
-/*   Updated: 2018/11/20 17:09:53 by bdevessi         ###   ########.fr       */
+/*   Created: 2018/11/21 13:34:52 by bdevessi          #+#    #+#             */
+/*   Updated: 2018/11/23 09:33:05 by bdevessi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,16 +40,17 @@ static int	read_buffer(const int fd, t_buffer *b, char **string)
 	char	*nl;
 	char	*tmp;
 
-	if (fd < 0 || fd >= INT_MAX)
+	if (fd < 0)
 		return (-1);
 	if (b->length == 0)
 		return (1);
 	if ((nl = ft_memchr(b->payload, '\n', b->length)))
 		return (complete_partially(b, nl, string));
 	tmp = *string;
+	b->payload[b->length] = '\0';
 	if (!(*string = tmp ? ft_strjoin(tmp, b->payload) : ft_strdup(b->payload)))
 		return (-1);
-	bzero(b->payload, BUFF_SIZE);
+	ft_bzero(b->payload, BUFF_SIZE);
 	if (tmp)
 		free(tmp);
 	return (1);
@@ -57,7 +58,7 @@ static int	read_buffer(const int fd, t_buffer *b, char **string)
 
 int			get_next_line(const int fd, char **line)
 {
-	static t_buffer		buffer[INT_MAX];
+	static t_buffer		buffer[(long)INT_MAX + 1];
 	int					result;
 	ssize_t				read_bytes;
 	char				*string;
